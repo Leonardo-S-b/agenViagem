@@ -23,6 +23,46 @@ router.get('/:id', async (req: Request, res: Response, next: NextFunction) => {
     }
 });
 
+
+router.get('/:id/reservas', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const id = Number(req.params.id);
+    if (!Number.isInteger(id) || id <= 0) {
+      return res.status(400).json({ error: 'Invalid cliente id' });
+    }
+
+    const reservas = await service.getReservasByClienteId(id);
+    if (reservas === null) return res.status(404).json({ error: 'Cliente not found' });
+    return res.json(reservas);
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.post('/:id/email-reservas', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const clienteId = Number(req.params.id);
+
+    if (!Number.isInteger(clienteId) || clienteId <= 0) {
+      return res.status(400).json({ error: 'Invalid cliente id' });
+    }
+
+    const result = await service.sendReservasEmail(clienteId);
+
+    if (result === null) {
+      return res.status(404).json({ error: 'Cliente not found' });
+    }
+
+    if (result.count === 0) {
+      return res.status(400).json({ error: 'No reservations to email' });
+    }
+
+    return res.status(202).json({ message: 'Email sent successfully', reservationsCount: result.count });
+  } catch (err) {
+    next(err);
+  }
+});
+
 router.post('/', async (req: Request, res: Response, next: NextFunction) => {
     try {
         const cliente = await service.createCliente(req.body);

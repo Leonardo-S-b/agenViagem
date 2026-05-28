@@ -8,7 +8,7 @@ export const createReserva = async (data: { clienteId: number; viagemId: number;
   const { clienteId, viagemId, quantidade_assentos } = data;
   if (quantidade_assentos <= 0) throw new Error('quantidade_assentos must be > 0');
 
-  return prisma.$transaction(async (tx) => {
+  return prisma.$transaction(async (tx: any) => {
     const cliente = await tx.cliente.findUnique({ where: { id: clienteId } });
     if (!cliente) throw new Error('Cliente not found');
 
@@ -29,7 +29,7 @@ export const createReserva = async (data: { clienteId: number; viagemId: number;
 };
 
 export const cancelReserva = async (id: number) => {
-  return prisma.$transaction(async (tx) => {
+  return prisma.$transaction(async (tx: { reserva: { findUnique: (arg0: { where: { id: number; }; }) => any; update: (arg0: { where: { id: number; }; data: { status: string; }; }) => any; }; viagem: { findUnique: (arg0: { where: { id: any; }; }) => any; update: (arg0: { where: { id: any; }; data: { assentos_ocupados: number; assentos_disponiveis: number; }; }) => any; }; }) => {
     const reserva = await tx.reserva.findUnique({ where: { id } });
     if (!reserva) throw new Error('Reserva not found');
     if (reserva.status === 'cancelado') throw new Error('Reserva already cancelled');
