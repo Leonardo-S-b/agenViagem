@@ -59,7 +59,13 @@ router.post('/:id/email-reservas', async (req: Request, res: Response, next: Nex
       return res.status(400).json({ error: 'No reservations to email' });
     }
 
-    return res.status(202).json({ message: 'Email sent successfully', reservationsCount: result.count });
+    if (result.sent === false) {
+      return res.status(502).json({ error: 'Failed to send email', detail: result.error ?? 'Unknown error' });
+    }
+
+    const payload: any = { message: 'Email sent successfully', reservationsCount: result.count };
+    if (result.previewUrl) payload.previewUrl = result.previewUrl;
+    return res.status(202).json(payload);
   } catch (err) {
     next(err);
   }
@@ -70,7 +76,17 @@ router.post('/', validateBody(createClienteSchema), async (req: Request, res: Re
     const cliente = await service.createCliente(req.body);
     res.status(201).json(cliente);
   } catch (err: any) {
-    if (err?.code === 'P2002') return res.status(409).json({ error: 'Unique constraint failed' });
+    if (err?.code === 'P2002') {
+      const target = err?.meta?.target
+        ? Array.isArray(err.meta.target)
+          ? err.meta.target.join(', ')
+          : String(err.meta.target)
+        : undefined;
+      if (target && target.toLowerCase().includes('cpf')) {
+        return res.status(409).json({ error: 'Cliente com mesmo CPF já existe' });
+      }
+      return res.status(409).json({ error: 'Unique constraint failed', target });
+    }
     next(err);
   }
 });

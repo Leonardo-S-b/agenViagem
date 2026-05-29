@@ -1,5 +1,6 @@
 import prisma from '../prisma/client';
 import { transporter, mailFrom } from '../utils/Email';
+import nodemailer from 'nodemailer';
 
 export const getAll = async () => prisma.cliente.findMany();
 
@@ -70,13 +71,17 @@ export const sendReservasEmail = async (clienteId: number) => {
     </ul>
   `;
 
-  await transporter.sendMail({
-    from: mailFrom,
-    to: cliente.email,
-    subject: 'Seu histórico de reservas',
-    html,
-  });
-
-  return { count: reservas.length };
+  try {
+    const info = await transporter.sendMail({
+      from: mailFrom,
+      to: cliente.email,
+      subject: 'Seu histórico de reservas',
+      html,
+    });
+    const preview = nodemailer.getTestMessageUrl(info) || undefined;
+    return { count: reservas.length, sent: true, previewUrl: preview };
+  } catch (e: any) {
+    return { count: reservas.length, sent: false, error: e?.message ?? String(e) };
+  }
 };
 
