@@ -1,0 +1,167 @@
+openapi: 3.0.3
+info:
+  title: AgenViagem API (Bruno Import)
+  version: 1.0.0
+  description: Coleção OpenAPI para importar no Bruno — endpoints principais para testes CRUD e fluxo de reservas.
+servers:
+  - url: http://localhost:3000
+    description: Local dev server
+paths:
+  /clientes:
+    post:
+      summary: Criar cliente
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClienteCreate'
+            example:
+              nome: "Maria Silva"
+              email: "maria@example.com"
+              telefone: "+5511999999999"
+      responses:
+        '201':
+          description: Cliente criado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cliente'
+  /viagens:
+    post:
+      summary: Criar viagem
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ViagemCreate'
+            example:
+              destino: "Fortaleza"
+              data_partida: "2026-10-01T09:00:00.000Z"
+              assentos_totais: 40
+      responses:
+        '201':
+          description: Viagem criada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Viagem'
+  /reservas:
+    post:
+      summary: Criar reserva (transacional — evita overbooking)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReservaCreate'
+            example:
+              clienteId: 1
+              viagemId: 1
+              assentos: 2
+      responses:
+        '201':
+          description: Reserva criada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Reserva'
+  /clientes/{id}/reservas:
+    get:
+      summary: Listar reservas de um cliente
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Lista de reservas
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Reserva'
+  /reservas/{id}:
+    delete:
+      summary: Cancelar / deletar reserva
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Reserva cancelada com sucesso
+components:
+  schemas:
+    ClienteCreate:
+      type: object
+      required: [nome, email]
+      properties:
+        nome:
+          type: string
+        email:
+          type: string
+          format: email
+        telefone:
+          type: string
+    Cliente:
+      allOf:
+        - $ref: '#/components/schemas/ClienteCreate'
+        - type: object
+          properties:
+            id:
+              type: integer
+    ViagemCreate:
+      type: object
+      required: [destino, data_partida, assentos_totais]
+      properties:
+        destino:
+          type: string
+        data_partida:
+          type: string
+          format: date-time
+        assentos_totais:
+          type: integer
+          minimum: 1
+    Viagem:
+      allOf:
+        - $ref: '#/components/schemas/ViagemCreate'
+        - type: object
+          properties:
+            id:
+              type: integer
+            assentos_ocupados:
+              type: integer
+              default: 0
+    ReservaCreate:
+      type: object
+      required: [clienteId, viagemId, assentos]
+      properties:
+        clienteId:
+          type: integer
+        viagemId:
+          type: integer
+        assentos:
+          type: integer
+          minimum: 1
+    Reserva:
+      allOf:
+        - $ref: '#/components/schemas/ReservaCreate'
+        - type: object
+          properties:
+            id:
+              type: integer
+            createdAt:
+              type: string
+              format: date-time
+
+x-info:
+  notes: |
+    Importe este arquivo no Bruno (GUI): File → Import → OpenAPI Specification (YAML).
+    Depois crie um Environment `local` com `baseURL = http://localhost:3000` e execute os requests na Collection Runner.

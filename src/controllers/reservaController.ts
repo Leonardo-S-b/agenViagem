@@ -1,5 +1,8 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import * as service from '../services/reservaService';
+import { validateBody, validateParams } from '../middlewares/validate';
+import { createReservaSchema } from '../schemas/reservaSchema';
+import { paramIdSchema } from '../schemas/clienteSchema';
 
 const router = Router();
 
@@ -23,7 +26,7 @@ router.get('/:id', async (req: Request, res: Response, next: NextFunction) => {
   }
 });
 
-router.post('/', async (req: Request, res: Response, next: NextFunction) => {
+router.post('/', validateBody(createReservaSchema), async (req: Request, res: Response, next: NextFunction) => {
   try {
     const reserva = await service.createReserva(req.body);
     res.status(201).json(reserva);
@@ -32,7 +35,7 @@ router.post('/', async (req: Request, res: Response, next: NextFunction) => {
   }
 });
 
-router.post('/:id/cancel', async (req: Request, res: Response, next: NextFunction) => {
+router.post('/:id/cancel', validateParams(paramIdSchema), async (req: Request, res: Response, next: NextFunction) => {
   try {
     const id = Number(req.params.id);
     const result = await service.cancelReserva(id);

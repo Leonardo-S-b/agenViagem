@@ -12,10 +12,9 @@ app.use('/clientes', clienteRouter);
 app.use('/viagens', viagemRouter);
 app.use('/reservas', reservaRouter);
 
-app.use((err: any, req: Request, res: Response, next: NextFunction) => {
-    console.error(err);
-    res.status(500).json({ error: 'Internal Server Error' });
-});
+import errorHandler from './middlewares/errorHandler';
+
+app.use(errorHandler);
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => console.log(`Server running on http://localhost:${port}`));

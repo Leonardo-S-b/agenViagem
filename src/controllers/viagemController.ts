@@ -1,5 +1,7 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import * as service from '../services/viagemService';
+import { validateBody } from '../middlewares/validate';
+import { createViagemSchema, updateViagemSchema } from '../schemas/viagemSchema';
 
 const router = Router();
 
@@ -23,7 +25,7 @@ router.get('/:id', async (req: Request, res: Response, next: NextFunction) => {
   }
 });
 
-router.post('/', async (req: Request, res: Response, next: NextFunction) => {
+router.post('/', validateBody(createViagemSchema), async (req: Request, res: Response, next: NextFunction) => {
   try {
     const viagem = await service.createViagem(req.body);
     res.status(201).json(viagem);
@@ -32,7 +34,7 @@ router.post('/', async (req: Request, res: Response, next: NextFunction) => {
   }
 });
 
-router.put('/:id', async (req: Request, res: Response, next: NextFunction) => {
+router.put('/:id', validateBody(updateViagemSchema), async (req: Request, res: Response, next: NextFunction) => {
   try {
     const id = Number(req.params.id);
     const viagem = await service.updateViagem(id, req.body);
