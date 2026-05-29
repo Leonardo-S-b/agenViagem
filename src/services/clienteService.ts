@@ -36,20 +36,37 @@ export const sendReservasEmail = async (clienteId: number) => {
   });
 
   if (reservas.length === 0) return { count: 0 };
+  const formatDate = (d: any) => {
+    if (!d) return '-';
+    try {
+      return new Date(d).toLocaleString('pt-BR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+    } catch (e) {
+      return String(d);
+    }
+  };
 
   const html = `
     <h2>Histórico de Reservas</h2>
     <p>Cliente: ${cliente.nome}</p>
     <ul>
       ${reservas
-        .map((r: any) => `
+      .map((r: any) => `
           <li>
             <strong>Destino:</strong> ${r.viagem?.destino ?? '-'}<br/>
+            <strong>Descrição:</strong> ${r.viagem?.descricao ?? '-'}<br/>
+            <strong>Embarque:</strong> ${formatDate(r.viagem?.data_saida)}<br/>
+            <strong>Desembarque/Retorno:</strong> ${formatDate(r.viagem?.data_retorno)}<br/>
             <strong>Assentos:</strong> ${r.quantidade_assentos}<br/>
             <strong>Status:</strong> ${r.status}
           </li>
         `)
-        .join('')}
+      .join('')}
     </ul>
   `;
 

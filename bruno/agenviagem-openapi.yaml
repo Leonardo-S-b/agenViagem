@@ -20,6 +20,7 @@ paths:
               nome: "Maria Silva"
               email: "maria@example.com"
               telefone: "+5511999999999"
+              cpf: "111.444.777-35"
       responses:
         '201':
           description: Cliente criado
@@ -38,8 +39,10 @@ paths:
               $ref: '#/components/schemas/ViagemCreate'
             example:
               destino: "Fortaleza"
-              data_partida: "2026-10-01T09:00:00.000Z"
-              assentos_totais: 40
+              data_saida: "2026-10-01T09:00:00.000Z"
+              data_retorno: "2026-10-10T18:00:00.000Z"
+              valor: 1299.90
+              total_assentos: 40
       responses:
         '201':
           description: Viagem criada
@@ -59,7 +62,7 @@ paths:
             example:
               clienteId: 1
               viagemId: 1
-              assentos: 2
+              quantidade_assentos: 2
       responses:
         '201':
           description: Reserva criada
@@ -85,6 +88,22 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Reserva'
+  /clientes/{id}/email-reservas:
+    post:
+      summary: Enviar histórico de reservas por e-mail ao cliente
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '202':
+          description: Email aceito para envio
+        '400':
+          description: Requisição inválida ou sem reservas
+        '404':
+          description: Cliente não encontrado
   /reservas/{id}:
     delete:
       summary: Cancelar / deletar reserva
@@ -101,7 +120,10 @@ components:
   schemas:
     ClienteCreate:
       type: object
-      required: [nome, email]
+      required:
+        - nome
+        - email
+        - cpf
       properties:
         nome:
           type: string
@@ -110,6 +132,9 @@ components:
           format: email
         telefone:
           type: string
+        cpf:
+          type: string
+          description: "CPF do cliente (ex: 111.444.777-35)"
     Cliente:
       allOf:
         - $ref: '#/components/schemas/ClienteCreate'
@@ -119,14 +144,21 @@ components:
               type: integer
     ViagemCreate:
       type: object
-      required: [destino, data_partida, assentos_totais]
+      required: [destino, data_saida, data_retorno, valor, total_assentos]
       properties:
         destino:
           type: string
-        data_partida:
+        data_saida:
           type: string
           format: date-time
-        assentos_totais:
+        data_retorno:
+          type: string
+          format: date-time
+        valor:
+          type: number
+          format: float
+          minimum: 0
+        total_assentos:
           type: integer
           minimum: 1
     Viagem:
@@ -141,13 +173,13 @@ components:
               default: 0
     ReservaCreate:
       type: object
-      required: [clienteId, viagemId, assentos]
+      required: [clienteId, viagemId, quantidade_assentos]
       properties:
         clienteId:
           type: integer
         viagemId:
           type: integer
-        assentos:
+        quantidade_assentos:
           type: integer
           minimum: 1
     Reserva:

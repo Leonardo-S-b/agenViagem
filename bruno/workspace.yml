@@ -1,0 +1,6 @@
+name: agenviagem
+version: 1
+specs:
+  - path: agenviagem-openapi.yaml
+    type: openapi
+README: README.md
